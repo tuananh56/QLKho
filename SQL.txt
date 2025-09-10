@@ -1,0 +1,184 @@
+
+-- ==========================
+-- 1. Bảng Nhà sản xuất
+-- ==========================
+CREATE TABLE manufacturers (
+    manufacturer_id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    address TEXT,
+    phone VARCHAR(50),
+    email VARCHAR(100)
+);
+
+-- ==========================
+-- 2. Bảng Cửa hàng
+-- ==========================
+CREATE TABLE stores (
+    store_id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    address TEXT,
+    phone VARCHAR(50)
+);
+
+-- ==========================
+-- 3. Bảng Kho
+-- ==========================
+CREATE TABLE warehouses (
+    warehouse_id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    address TEXT,
+    is_main BOOLEAN DEFAULT TRUE -- TRUE = kho tổng, FALSE = kho con
+);
+
+-- ==========================
+-- 4. Bảng Kho con
+-- ==========================
+CREATE TABLE sub_warehouses (
+    sub_id SERIAL PRIMARY KEY,
+    warehouse_id INT REFERENCES warehouses(warehouse_id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    address TEXT
+);
+
+-- ==========================
+-- 5. Bảng Sản phẩm
+-- ==========================
+CREATE TABLE products (
+    product_id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    manufacturer_id INT REFERENCES manufacturers(manufacturer_id) ON DELETE SET NULL,
+    unit VARCHAR(50) DEFAULT 'cái'
+);
+
+-- ==========================
+-- 6. Bảng Quản lý tồn kho
+-- ==========================
+CREATE TABLE inventory (
+    inventory_id SERIAL PRIMARY KEY,
+    warehouse_id INT REFERENCES warehouses(warehouse_id) ON DELETE CASCADE,
+    product_id INT REFERENCES products(product_id) ON DELETE CASCADE,
+    quantity INT DEFAULT 0,
+    UNIQUE(warehouse_id, product_id)
+);
+
+-- ==========================
+-- 7. Bảng Phiếu nhập kho
+-- ==========================
+CREATE TABLE stock_in (
+    stock_in_id SERIAL PRIMARY KEY,
+    warehouse_id INT REFERENCES warehouses(warehouse_id),
+    product_id INT REFERENCES products(product_id),
+    quantity INT NOT NULL,
+    date_in TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    from_manufacturer INT REFERENCES manufacturers(manufacturer_id),
+    note TEXT
+);
+
+-- ==========================
+-- 8. Bảng Phiếu xuất kho
+-- ==========================
+CREATE TABLE stock_out (
+    stock_out_id SERIAL PRIMARY KEY,
+    warehouse_id INT REFERENCES warehouses(warehouse_id),
+    product_id INT REFERENCES products(product_id),
+    quantity INT NOT NULL,
+    date_out TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    to_store INT REFERENCES stores(store_id),
+    note TEXT
+); 
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+INSERT INTO manufacturers (name, address, phone, email)
+SELECT 
+  'Manufacturer ' || g,
+  'Address ' || g,
+  '0900' || lpad(g::text, 6, '0'),
+  'manufacturer' || g || '@mail.com'
+FROM generate_series(1,100) g;
+
+
+INSERT INTO stores (name, address, phone)
+SELECT 
+  'Store ' || g,
+  'Store Address ' || g,
+  '0911' || lpad(g::text, 6, '0')
+FROM generate_series(1,100) g;
+
+
+INSERT INTO warehouses (name, address, is_main)
+SELECT 
+  'Warehouse ' || g,
+  'Warehouse Address ' || g,
+  CASE WHEN g = 1 THEN TRUE ELSE FALSE END
+FROM generate_series(1,100) g;
+
+
+INSERT INTO sub_warehouses (warehouse_id, name, address)
+SELECT 
+  (g % 50) + 1, -- chia đều cho 50 kho đầu tiên
+  'SubWarehouse ' || g,
+  'SubWarehouse Address ' || g
+FROM generate_series(1,100) g;
+
+
+INSERT INTO products (name, manufacturer_id, unit)
+SELECT 
+  'Product ' || g,
+  (g % 100) + 1, -- random nhà sản xuất
+  'cái'
+FROM generate_series(1,100) g;
+
+
+INSERT INTO inventory (warehouse_id, product_id, quantity)
+SELECT 
+  (g % 100) + 1, -- random kho
+  (g % 100) + 1, -- random sản phẩm
+  (random() * 500)::int
+FROM generate_series(1,100) g
+ON CONFLICT (warehouse_id, product_id) DO NOTHING;
+
+
+INSERT INTO stock_in (warehouse_id, product_id, quantity, date_in, from_manufacturer, note)
+SELECT 
+  (g % 100) + 1,
+  (g % 100) + 1,
+  (random() * 100 + 1)::int,
+  NOW() - (g || ' days')::interval,
+  (g % 100) + 1,
+  'Nhập lô hàng số ' || g
+FROM generate_series(1,100) g;
+
+
+INSERT INTO stock_out (warehouse_id, product_id, quantity, date_out, to_store, note)
+SELECT 
+  (g % 100) + 1,
+  (g % 100) + 1,
+  (random() * 50 + 1)::int,
+  NOW() - (g || ' days')::interval,
+  (g % 100) + 1,
+  'Xuất lô hàng số ' || g
+FROM generate_series(1,100) g;
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+SELECT * FROM manufacturers;
+SELECT * FROM stores;
+SELECT * FROM warehouses;
+SELECT * FROM sub_warehouses;
+SELECT * FROM products;
+SELECT * FROM inventory;
+SELECT * FROM stock_in;
+SELECT * FROM stock_out;
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+SELECT COUNT(*) FROM manufacturers;
+SELECT COUNT(*) FROM stores;
+SELECT COUNT(*) FROM warehouses;
+SELECT COUNT(*) FROM sub_warehouses;
+SELECT COUNT(*) FROM products;
+SELECT COUNT(*) FROM inventory;
+SELECT COUNT(*) FROM stock_in;
+SELECT COUNT(*) FROM stock_out;
