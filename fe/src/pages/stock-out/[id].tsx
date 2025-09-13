@@ -1,3 +1,4 @@
+"use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import axios from "axios";
@@ -6,37 +7,40 @@ interface Product {
   product_id: number;
   name: string;
 }
+
 interface Warehouse {
   warehouse_id: number;
   name: string;
 }
-interface Manufacturer {
-  manufacturer_id: number;
+
+interface Store {
+  store_id: number;
   name: string;
 }
-interface StockIn {
-  stock_in_id: number;
+
+interface StockOut {
+  stock_out_id: number;
   product_id: number;
   warehouse_id: number;
   quantity: number;
-  from_manufacturer: number;
-  note: string;
+  to_store?: number | null;
+  note?: string;
 }
 
-export default function DetailStockIn() {
+export default function DetailStockOut() {
   const router = useRouter();
   const { id } = router.query;
 
   const [products, setProducts] = useState<Product[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
-  const [manufacturers, setManufacturers] = useState<Manufacturer[]>([]);
+  const [stores, setStores] = useState<Store[]>([]);
 
-  const [formData, setFormData] = useState<StockIn>({
-    stock_in_id: 0,
+  const [formData, setFormData] = useState<StockOut>({
+    stock_out_id: 0,
     product_id: 0,
     warehouse_id: 0,
     quantity: 1,
-    from_manufacturer: 0,
+    to_store: undefined,
     note: "",
   });
 
@@ -45,18 +49,18 @@ export default function DetailStockIn() {
 
     const fetchData = async () => {
       try {
-        const [stockRes, productsRes, warehousesRes, manufacturersRes] =
+        const [stockRes, productsRes, warehousesRes, storesRes] =
           await Promise.all([
-            axios.get<StockIn>(`http://localhost:4001/stock-in/${id}`),
-            axios.get<Product[]>("http://localhost:4001/products"),
-            axios.get<Warehouse[]>("http://localhost:4001/warehouses"),
-            axios.get<Manufacturer[]>("http://localhost:4001/manufacturers"),
+            axios.get<StockOut>(`http://localhost:4001/stock-out/${id}`),
+            axios.get<Product[]>(`http://localhost:4001/products`),
+            axios.get<Warehouse[]>(`http://localhost:4001/warehouses`),
+            axios.get<Store[]>(`http://localhost:4001/stores`),
           ]);
 
         setProducts(productsRes.data);
         setWarehouses(warehousesRes.data);
-        setManufacturers(manufacturersRes.data);
-        setFormData(stockRes.data); // ✅ set sau khi options load xong
+        setStores(storesRes.data);
+        setFormData(stockRes.data);
       } catch (err) {
         console.error(err);
       }
@@ -72,29 +76,33 @@ export default function DetailStockIn() {
 
     setFormData({
       ...formData,
-      [name]: ["product_id", "warehouse_id", "from_manufacturer"].includes(name)
-        ? Number(value) // Ép kiểu number cho select
+      [name]: ["product_id", "warehouse_id", "to_store"].includes(name)
+        ? Number(value)
         : value,
     });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await axios.put(`http://localhost:4001/stock-in/${id}`, {
-      ...formData,
-      product_id: Number(formData.product_id),
-      warehouse_id: Number(formData.warehouse_id),
-      quantity: Number(formData.quantity),
-      from_manufacturer: Number(formData.from_manufacturer),
-    });
-
-    router.push("/stock-in/StockInPage");
+    try {
+      await axios.put(`http://localhost:4001/stock-out/${id}`, {
+        ...formData,
+        product_id: Number(formData.product_id),
+        warehouse_id: Number(formData.warehouse_id),
+        quantity: Number(formData.quantity),
+        to_store: formData.to_store ? Number(formData.to_store) : null,
+      });
+      router.push("/stock-out/StockOutPage");
+    } catch (err) {
+      console.error("Cập nhật thất bại:", err);
+      alert("Cập nhật thất bại");
+    }
   };
 
   return (
     <div className="p-6 max-w-lg mx-auto">
       <h1 className="text-2xl font-bold mb-4">
-        Sửa phiếu nhập: {formData.stock_in_id || id}
+        Sửa phiếu xuất: {formData.stock_out_id || id}
       </h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <select
@@ -110,6 +118,7 @@ export default function DetailStockIn() {
             </option>
           ))}
         </select>
+
         <select
           name="warehouse_id"
           value={formData.warehouse_id}
@@ -135,14 +144,15 @@ export default function DetailStockIn() {
         />
 
         <select
-          name="from_manufacturer"
-          value={formData.from_manufacturer}
+          name="to_store"
+          value={formData.to_store ?? ""}
           onChange={handleChange}
           className="w-full border p-2 rounded"
         >
-          {manufacturers.map((m) => (
-            <option key={m.manufacturer_id} value={m.manufacturer_id}>
-              {m.name}
+          <option value="">-- Chọn cửa hàng --</option>
+          {stores.map((s) => (
+            <option key={s.store_id} value={s.store_id}>
+              {s.name}
             </option>
           ))}
         </select>
@@ -150,9 +160,10 @@ export default function DetailStockIn() {
         <input
           type="text"
           name="note"
-          value={formData.note}
+          value={formData.note ?? ""}
           onChange={handleChange}
           className="w-full border p-2 rounded"
+          placeholder="Ghi chú"
         />
 
         <button

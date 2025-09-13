@@ -73,6 +73,23 @@ export default function DashboardPage() {
         </Link>
       </div>
 
+       <div style={{ marginTop: 20, marginBottom: 20 }}>
+        <Link href="/stock-out/StockOutPage">
+          <button
+            style={{
+              backgroundColor: "#2563eb",
+              color: "white",
+              padding: "8px 16px",
+              borderRadius: "8px",
+              border: "none",
+              cursor: "pointer",
+            }}
+          >
+            ➕ Tạo phiếu xuất kho
+          </button>
+        </Link>
+      </div>
+
       <section style={{ marginTop: 20 }}>
         <h2>Tồn kho</h2>
         <InventoryTable data={inventory} />

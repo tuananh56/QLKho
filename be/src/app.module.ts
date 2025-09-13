@@ -15,7 +15,8 @@ import { StockInModule } from './stock-in/stock-in.module';
 import { ProductsModule } from './products/products.module';
 import { WarehousesModule } from './warehouses/warehouses.module';
 import { ManufacturersModule } from './manufacturers/manufacturers.module';
-
+import { StockOutModule } from './stock-out/stock-out.module'; 
+import { StoresModule } from './stores/stores.module';
 
 @Module({
   imports: [
@@ -42,9 +43,11 @@ import { ManufacturersModule } from './manufacturers/manufacturers.module';
     }),
     DashboardModule,
     StockInModule,
+    StockOutModule,
     ProductsModule,
     WarehousesModule,
     ManufacturersModule,
+    StoresModule,
   ],
 })
 export class AppModule {}
