@@ -3,28 +3,22 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 
-interface Product {
-  product_id: number;
-  name: string;
-}
+interface Product { product_id: number; name: string; }
+interface Warehouse { warehouse_id: number; name: string; }
+interface Store { store_id: number; name: string; }
 
-interface Warehouse {
+interface Inventory {
   warehouse_id: number;
-  name: string;
-}
-
-interface Store {
-  store_id: number;
-  name: string;
+  product_id: number;
+  quantity: number;
 }
 
 export default function CreateStockOut() {
   const router = useRouter();
-
   const [products, setProducts] = useState<Product[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [stores, setStores] = useState<Store[]>([]);
-
+  const [availableWarehouses, setAvailableWarehouses] = useState<Warehouse[]>([]);
   const [formData, setFormData] = useState({
     product_id: "",
     warehouse_id: "",
@@ -34,17 +28,35 @@ export default function CreateStockOut() {
   });
 
   useEffect(() => {
-    axios.get<Product[]>("http://localhost:4001/products")
-      .then(res => setProducts(res.data));
-    axios.get<Warehouse[]>("http://localhost:4001/warehouses")
-      .then(res => setWarehouses(res.data));
-    axios.get<Store[]>("http://localhost:4001/stores")
-      .then(res => setStores(res.data));
+    axios.get<Product[]>("http://localhost:4001/products").then(res => setProducts(res.data));
+    axios.get<Store[]>("http://localhost:4001/stores").then(res => setStores(res.data));
   }, []);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
-  ) => {
+  // Khi chọn sản phẩm, gọi backend lấy kho còn tồn kho
+  const handleProductChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const productId = e.target.value;
+    setFormData(prev => ({ ...prev, product_id: productId, warehouse_id: "" }));
+
+    if (!productId) {
+      setAvailableWarehouses([]);
+      return;
+    }
+
+    try {
+      const res = await axios.get<Inventory[]>(`http://localhost:4001/inventory?product_id=${productId}`);
+      const whIds = res.data.filter(i => i.quantity > 0).map(i => i.warehouse_id);
+
+      // Lấy thông tin tên kho
+      const whRes = await axios.get<Warehouse[]>("http://localhost:4001/warehouses");
+      const filtered = whRes.data.filter(w => whIds.includes(w.warehouse_id));
+      setAvailableWarehouses(filtered);
+    } catch (err) {
+      console.error(err);
+      setAvailableWarehouses([]);
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
@@ -59,10 +71,9 @@ export default function CreateStockOut() {
         to_store: formData.to_store ? Number(formData.to_store) : undefined,
         note: formData.note,
       };
-
       await axios.post("http://localhost:4001/stock-out", payload);
       alert("Tạo phiếu xuất thành công!");
-      router.push("/stock-out/StockOutPage"); // Quay về danh sách
+      router.push("/stock-out/StockOutPage");
     } catch (err) {
       console.error(err);
       alert("Có lỗi xảy ra!");
@@ -71,104 +82,51 @@ export default function CreateStockOut() {
 
   return (
     <div className="max-w-lg mx-auto mt-10 p-6 bg-white rounded-lg shadow">
-      {/* Button Quay lại */}
-      <button
-        className="mb-4 bg-gray-300 text-black px-3 py-2 rounded hover:bg-gray-400"
-        onClick={() => router.push("/stock-out/StockOutPage")}
-      >
-        ← Quay lại
-      </button>
+      <button className="mb-4 bg-gray-300 text-black px-3 py-2 rounded hover:bg-gray-400"
+        onClick={() => router.push("/stock-out/StockOutPage")}>← Quay lại</button>
 
       <h2 className="text-2xl font-bold mb-4">Tạo phiếu xuất kho</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Chọn sản phẩm */}
+        {/* Sản phẩm */}
         <div>
           <label className="block mb-1 font-medium">Sản phẩm</label>
-          <select
-            name="product_id"
-            value={formData.product_id}
-            onChange={handleChange}
-            className="w-full border rounded p-2"
-            required
-          >
+          <select name="product_id" value={formData.product_id} onChange={handleProductChange} className="w-full border rounded p-2" required>
             <option value="">-- Chọn sản phẩm --</option>
-            {products.map(p => (
-              <option key={p.product_id} value={p.product_id}>
-                {p.name}
-              </option>
-            ))}
+            {products.map(p => <option key={p.product_id} value={p.product_id}>{p.name}</option>)}
           </select>
         </div>
 
-        {/* Chọn kho */}
+        {/* Kho */}
         <div>
           <label className="block mb-1 font-medium">Kho</label>
-          <select
-            name="warehouse_id"
-            value={formData.warehouse_id}
-            onChange={handleChange}
-            className="w-full border rounded p-2"
-            required
-          >
+          <select name="warehouse_id" value={formData.warehouse_id} onChange={handleChange} className="w-full border rounded p-2" required>
             <option value="">-- Chọn kho --</option>
-            {warehouses.map(w => (
-              <option key={w.warehouse_id} value={w.warehouse_id}>
-                {w.name}
-              </option>
-            ))}
+            {availableWarehouses.map(w => <option key={w.warehouse_id} value={w.warehouse_id}>{w.name}</option>)}
           </select>
         </div>
 
         {/* Số lượng */}
         <div>
           <label className="block mb-1 font-medium">Số lượng</label>
-          <input
-            type="number"
-            name="quantity"
-            value={formData.quantity}
-            onChange={handleChange}
-            className="w-full border rounded p-2"
-            min={1}
-            required
-          />
+          <input type="number" name="quantity" value={formData.quantity} onChange={handleChange} className="w-full border rounded p-2" min={1} required />
         </div>
 
-        {/* Cửa hàng */}
+        {/* Store */}
         <div>
           <label className="block mb-1 font-medium">Cửa hàng</label>
-          <select
-            name="to_store"
-            value={formData.to_store}
-            onChange={handleChange}
-            className="w-full border rounded p-2"
-          >
+          <select name="to_store" value={formData.to_store} onChange={handleChange} className="w-full border rounded p-2">
             <option value="">-- Chọn cửa hàng --</option>
-            {stores.map(s => (
-              <option key={s.store_id} value={s.store_id}>
-                {s.name}
-              </option>
-            ))}
+            {stores.map(s => <option key={s.store_id} value={s.store_id}>{s.name}</option>)}
           </select>
         </div>
 
         {/* Ghi chú */}
         <div>
           <label className="block mb-1 font-medium">Ghi chú</label>
-          <textarea
-            name="note"
-            value={formData.note}
-            onChange={handleChange}
-            className="w-full border rounded p-2"
-            rows={3}
-          />
+          <textarea name="note" value={formData.note} onChange={handleChange} className="w-full border rounded p-2" rows={3} />
         </div>
 
-        <button
-          type="submit"
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-        >
-          Lưu phiếu xuất
-        </button>
+        <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Tạo phiếu xuất</button>
       </form>
     </div>
   );
