@@ -12,26 +12,13 @@ import {
   createTransfer,
   WarehouseTransfer,
 } from "@/services/warehousetransferService";
-
-// Tự định nghĩa Product interface
-interface Product {
-  product_id: number;
-  name: string;
-  unit?: string;
-}
-
-// Dummy sản phẩm nếu chưa có API
-const DUMMY_PRODUCTS: Product[] = [
-  { product_id: 1, name: "Product A" },
-  { product_id: 2, name: "Product B" },
-  { product_id: 3, name: "Product C" },
-];
+import { getAllProducts, Product } from "@/services/productService";
 
 export default function WarehouseTransferPage() {
   const [transfers, setTransfers] = useState<WarehouseTransfer[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [subWarehouses, setSubWarehouses] = useState<SubWarehouse[]>([]);
-  const [products, setProducts] = useState<Product[]>(DUMMY_PRODUCTS);
+  const [products, setProducts] = useState<Product[]>([]);
 
   const [formData, setFormData] = useState({
     productId: 0,
@@ -48,7 +35,7 @@ export default function WarehouseTransferPage() {
 
   // Search & Sort
   const [search, setSearch] = useState("");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc"); // desc = mới → cũ
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
   const [gotoPage, setGotoPage] = useState(1);
 
@@ -58,14 +45,16 @@ export default function WarehouseTransferPage() {
 
   const fetchData = async () => {
     try {
-      const [t, w, s] = await Promise.all([
+      const [t, w, s, p] = await Promise.all([
         getAllTransfers(),
         getAllWarehouse(),
         getAllSubWarehouse(),
+        getAllProducts(),
       ]);
       setTransfers(t);
       setWarehouses(w);
       setSubWarehouses(s);
+      setProducts(p);
     } catch (error) {
       console.error("Lỗi fetch data:", error);
     }
@@ -148,12 +137,12 @@ export default function WarehouseTransferPage() {
 
   return (
     <div className="p-4">
-       <button
-    onClick={() => window.location.href = "http://localhost:4000/"}
-    className="bg-gray-500 text-white px-3 py-2 rounded hover:bg-gray-600"
-  >
-    ⬅ Quay lại trang chính
-  </button>
+      <button
+        onClick={() => (window.location.href = "http://localhost:4000/")}
+        className="bg-gray-500 text-white px-3 py-2 rounded hover:bg-gray-600 mb-4"
+      >
+        ⬅ Quay lại trang chính
+      </button>
 
       <h1 className="text-xl font-bold mb-4">
         Chuyển sản phẩm từ kho chính sang kho con
@@ -297,6 +286,7 @@ export default function WarehouseTransferPage() {
         </form>
       )}
 
+      {/* Table */}
       <table className="w-full border-collapse border">
         <thead>
           <tr className="bg-gray-200">
