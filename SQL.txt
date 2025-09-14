@@ -87,6 +87,20 @@ CREATE TABLE stock_out (
     note TEXT
 ); 
 
+-- ==========================
+-- 9. Bảng Phiếu chuyển hàng
+-- ==========================
+
+CREATE TABLE warehouse_transfer (
+    transfer_id SERIAL PRIMARY KEY,
+    product_id INT REFERENCES products(product_id),
+    from_warehouse INT REFERENCES warehouses(warehouse_id),
+    to_sub_warehouse INT REFERENCES sub_warehouses(sub_id),
+    quantity INT NOT NULL,
+    transfer_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    note TEXT
+);
+
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 INSERT INTO manufacturers (name, address, phone, email)
@@ -160,6 +174,20 @@ SELECT
   'Xuất lô hàng số ' || g
 FROM generate_series(1,100) g;
 
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- Inventory: quản lý tồn kho ở kho con
+ALTER TABLE inventory ADD COLUMN sub_warehouse_id INT REFERENCES sub_warehouses(sub_id);
+
+-- Stock_in: nhập hàng vào kho con
+ALTER TABLE stock_in ADD COLUMN sub_warehouse_id INT REFERENCES sub_warehouses(sub_id);
+
+-- Stock_out: xuất hàng từ kho con
+ALTER TABLE stock_out ADD COLUMN sub_warehouse_id INT REFERENCES sub_warehouses(sub_id);
+
+ALTER TABLE inventory
+ADD COLUMN sub_id INT REFERENCES sub_warehouses(sub_id) ON DELETE CASCADE;
+
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -182,3 +210,48 @@ SELECT COUNT(*) FROM products;
 SELECT COUNT(*) FROM inventory;
 SELECT COUNT(*) FROM stock_in;
 SELECT COUNT(*) FROM stock_out;
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+INSERT INTO warehouse_transfer (product_id, from_warehouse, to_sub_warehouse, quantity, transfer_date, note) VALUES (1, 1, 1, 50, '2025-09-01 08:00:00', 'Lô hàng đầu tiên');
+INSERT INTO warehouse_transfer (product_id, from_warehouse, to_sub_warehouse, quantity, transfer_date, note) VALUES (2, 1, 2, 30, '2025-09-01 09:00:00', 'Lô hàng nhập nhanh');
+INSERT INTO warehouse_transfer (product_id, from_warehouse, to_sub_warehouse, quantity, transfer_date, note) VALUES (3, 2, 3, 40, '2025-09-01 10:00:00', 'Chuyển hàng khu vực A');
+INSERT INTO warehouse_transfer (product_id, from_warehouse, to_sub_warehouse, quantity, transfer_date, note) VALUES (4, 2, 4, 20, '2025-09-01 11:00:00', 'Chuyển hàng khu vực B');
+INSERT INTO warehouse_transfer (product_id, from_warehouse, to_sub_warehouse, quantity, transfer_date, note) VALUES (5, 1, 5, 60, '2025-09-01 12:00:00', 'Lô hàng mới');
+INSERT INTO warehouse_transfer (product_id, from_warehouse, to_sub_warehouse, quantity, transfer_date, note) VALUES (6, 1, 1, 25, '2025-09-02 08:00:00', 'Bổ sung kho con 1');
+INSERT INTO warehouse_transfer (product_id, from_warehouse, to_sub_warehouse, quantity, transfer_date, note) VALUES (7, 2, 2, 35, '2025-09-02 09:30:00', 'Chuyển hàng từ kho 2');
+INSERT INTO warehouse_transfer (product_id, from_warehouse, to_sub_warehouse, quantity, transfer_date, note) VALUES (8, 1, 3, 45, '2025-09-02 10:15:00', 'Hàng khu vực A');
+INSERT INTO warehouse_transfer (product_id, from_warehouse, to_sub_warehouse, quantity, transfer_date, note) VALUES (9, 2, 4, 50, '2025-09-02 11:45:00', 'Chuyển kho B');
+INSERT INTO warehouse_transfer (product_id, from_warehouse, to_sub_warehouse, quantity, transfer_date, note) VALUES (10, 1, 5, 20, '2025-09-02 12:30:00', 'Bổ sung kho 5');
+
+
+
+-- 11 đến 100
+INSERT INTO warehouse_transfer (product_id, from_warehouse, to_sub_warehouse, quantity, transfer_date, note) VALUES (11, 1, 1, 15, '2025-09-03 08:00:00', 'Chuyển hàng 11');
+INSERT INTO warehouse_transfer (product_id, from_warehouse, to_sub_warehouse, quantity, transfer_date, note) VALUES (12, 1, 2, 25, '2025-09-03 08:30:00', 'Chuyển hàng 12');
+INSERT INTO warehouse_transfer (product_id, from_warehouse, to_sub_warehouse, quantity, transfer_date, note) VALUES (13, 1, 3, 35, '2025-09-03 09:00:00', 'Chuyển hàng 13');
+INSERT INTO warehouse_transfer (product_id, from_warehouse, to_sub_warehouse, quantity, transfer_date, note) VALUES (14, 2, 4, 45, '2025-09-03 09:30:00', 'Chuyển hàng 14');
+INSERT INTO warehouse_transfer (product_id, from_warehouse, to_sub_warehouse, quantity, transfer_date, note) VALUES (15, 2, 5, 20, '2025-09-03 10:00:00', 'Chuyển hàng 15');
+INSERT INTO warehouse_transfer (product_id, from_warehouse, to_sub_warehouse, quantity, transfer_date, note) VALUES (16, 1, 1, 10, '2025-09-03 10:30:00', 'Chuyển hàng 16');
+INSERT INTO warehouse_transfer (product_id, from_warehouse, to_sub_warehouse, quantity, transfer_date, note) VALUES (17, 2, 2, 30, '2025-09-03 11:00:00', 'Chuyển hàng 17');
+INSERT INTO warehouse_transfer (product_id, from_warehouse, to_sub_warehouse, quantity, transfer_date, note) VALUES (18, 1, 3, 40, '2025-09-03 11:30:00', 'Chuyển hàng 18');
+INSERT INTO warehouse_transfer (product_id, from_warehouse, to_sub_warehouse, quantity, transfer_date, note) VALUES (19, 2, 4, 25, '2025-09-03 12:00:00', 'Chuyển hàng 19');
+INSERT INTO warehouse_transfer (product_id, from_warehouse, to_sub_warehouse, quantity, transfer_date, note) VALUES (20, 1, 5, 50, '2025-09-03 12:30:00', 'Chuyển hàng 20');
+
+-- Xem tất cả dữ liệu trong bảng
+SELECT * FROM warehouse_transfer;
+
+SELECT 
+    t.transfer_id,
+    p.name AS product_name,
+    w.name AS main_warehouse,
+    sw.name AS sub_warehouse,
+    t.quantity,
+    t.transfer_date,
+    t.note
+FROM warehouse_transfer t
+JOIN products p ON t.product_id = p.product_id
+JOIN warehouses w ON t.from_warehouse = w.warehouse_id
+JOIN sub_warehouses sw ON t.to_sub_warehouse = sw.sub_id
+ORDER BY t.transfer_date;
