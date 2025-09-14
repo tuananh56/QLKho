@@ -152,7 +152,7 @@ export default function StockOutPage() {
       <div className="p-4">
         <button
           className="mb-4 bg-gray-300 text-black px-3 py-2 rounded"
-          onClick={() => router.back()}
+           onClick={() => router.push("http://localhost:4000")}
         >
           ← Quay lại
         </button>

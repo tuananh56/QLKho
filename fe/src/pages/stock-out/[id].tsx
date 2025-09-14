@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation"; // ✅ dùng navigation thay vì next/router
 import axios from "axios";
 
 interface Product {
@@ -27,14 +27,13 @@ interface StockOut {
   note?: string;
 }
 
-export default function DetailStockOut() {
+export default function DetailStockOut({ params }: { params: { id: string } }) {
   const router = useRouter();
-  const { id } = router.query;
+  const { id } = params;
 
   const [products, setProducts] = useState<Product[]>([]);
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [stores, setStores] = useState<Store[]>([]);
-
   const [formData, setFormData] = useState<StockOut>({
     stock_out_id: 0,
     product_id: 0,
@@ -92,7 +91,9 @@ export default function DetailStockOut() {
         quantity: Number(formData.quantity),
         to_store: formData.to_store ? Number(formData.to_store) : null,
       });
-      router.push("/stock-out/StockOutPage");
+
+      // ✅ quay lại StockOutPage sau khi cập nhật thành công
+      router.push("http://localhost:4000/stock-out/StockOutPage");
     } catch (err) {
       console.error("Cập nhật thất bại:", err);
       alert("Cập nhật thất bại");

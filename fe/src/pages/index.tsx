@@ -73,7 +73,7 @@ export default function DashboardPage() {
         </Link>
       </div>
 
-       <div style={{ marginTop: 20, marginBottom: 20 }}>
+      <div style={{ marginTop: 20, marginBottom: 20 }}>
         <Link href="/stock-out/StockOutPage">
           <button
             style={{
@@ -86,6 +86,57 @@ export default function DashboardPage() {
             }}
           >
             ➕ Tạo phiếu xuất kho
+          </button>
+        </Link>
+      </div>
+
+      <div style={{ marginTop: 20, marginBottom: 20 }}>
+        <Link href="/inventory/inventoryPage">
+          <button
+            style={{
+              backgroundColor: "#16a34a", // xanh lá
+              color: "white",
+              padding: "8px 16px",
+              borderRadius: "8px",
+              border: "none",
+              cursor: "pointer",
+            }}
+          >
+            📦 Xem tồn kho
+          </button>
+        </Link>
+      </div>
+
+      <div style={{ marginTop: 20, marginBottom: 20 }}>
+        <Link href="/subWarehouse/subWarehousePage">
+          <button
+            style={{
+              backgroundColor: "#16a34a", // xanh lá
+              color: "white",
+              padding: "8px 16px",
+              borderRadius: "8px",
+              border: "none",
+              cursor: "pointer",
+            }}
+          >
+            kho con
+          </button>
+        </Link>
+      </div>
+
+      <div style={{ marginTop: 20, marginBottom: 20 }}>
+        <Link href="/warehouse-transfer/warehouseTransferPage">
+          <button
+            style={{
+              backgroundColor: "#f59e0b", // vàng cam
+              color: "white",
+              padding: "8px 16px",
+              borderRadius: "8px",
+              border: "none",
+              cursor: "pointer",
+            }}
+          >
+            🔄 Chuyển kho
           </button>
         </Link>
       </div>

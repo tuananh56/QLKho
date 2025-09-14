@@ -17,14 +17,16 @@ export class InventoryService {
     private readonly inventoryRepo: Repository<Inventory>,
   ) {}
 
-  async findAll(): Promise<InventoryItem[]> {
+  async findAll(): Promise<any[]> {
     const inventories = await this.inventoryRepo.find({
       relations: ['warehouse', 'product'],
     });
 
     return inventories.map((inv) => ({
       warehouse_id: inv.warehouse.warehouse_id,
+      warehouse: inv.warehouse.name,
       product_id: inv.product.product_id,
+      product: inv.product.name,
       quantity: inv.quantity,
     }));
   }

@@ -69,7 +69,7 @@ export default function CreateStockIn() {
 
       await axios.post("http://localhost:4001/stock-in", payload);
       alert("Tạo phiếu nhập thành công!");
-      router.push("/stock-in"); // Quay về danh sách
+      router.push("/stock-in/StockInPage"); // Quay về danh sách
     } catch (err) {
       console.error(err);
       alert("Có lỗi xảy ra!");
@@ -81,7 +81,7 @@ export default function CreateStockIn() {
       {/* Button Quay lại */}
       <button
         className="mb-4 bg-gray-300 text-black px-3 py-2 rounded hover:bg-gray-400"
-        onClick={() => router.push("/stock-in/StockInPage")}
+        onClick={() => router.push("http://localhost:4000/stock-in/StockInPage")}
       >
         ← Quay lại
       </button>

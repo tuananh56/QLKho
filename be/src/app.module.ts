@@ -18,6 +18,8 @@ import { ManufacturersModule } from './manufacturers/manufacturers.module';
 import { StockOutModule } from './stock-out/stock-out.module'; 
 import { StoresModule } from './stores/stores.module';
 import { InventoryModule } from './inventory/inventory.module';
+import { SubWarehouseModule } from './sub-warehouse/sub-warehouse.module';
+import { WarehouseTransferModule } from './warehouse-transfer/warehouse-transfer.module';
 
 @Module({
   imports: [
@@ -50,6 +52,8 @@ import { InventoryModule } from './inventory/inventory.module';
     ManufacturersModule,
     StoresModule,
     InventoryModule,
+    SubWarehouseModule,
+    WarehouseTransferModule,
   ],
 })
 export class AppModule {}
