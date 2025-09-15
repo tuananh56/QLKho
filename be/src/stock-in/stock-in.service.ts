@@ -328,4 +328,31 @@ export class StockInService {
       note: s.note ?? '',
     }));
   }
+  // stock-in.service.ts
+  async getMonthlyReport(year: number) {
+    const rawData: { month: number; total_quantity: string }[] =
+      await this.stockInRepo.query(
+        `
+      SELECT 
+        EXTRACT(MONTH FROM date_in) AS month, 
+        SUM(quantity) AS total_quantity
+      FROM stock_in
+      WHERE EXTRACT(YEAR FROM date_in) = $1
+      GROUP BY month
+      ORDER BY month
+    `,
+        [year],
+      );
+
+    // Chuyển về mảng đủ 12 tháng, nếu tháng nào không có dữ liệu thì gán 0
+    const result = Array.from({ length: 12 }, (_, i) => {
+      const monthData = rawData.find((d) => Number(d.month) === i + 1);
+      return {
+        month: i + 1,
+        total_quantity: monthData ? Number(monthData.total_quantity) : 0,
+      };
+    });
+
+    return result;
+  }
 }

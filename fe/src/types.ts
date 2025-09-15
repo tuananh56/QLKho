@@ -32,6 +32,20 @@ export interface AlertItem {
   quantity: number;
 }
 
+// types.ts
+export interface SubWarehouseSummary {
+  warehouse_id: number;
+  warehouse: string;
+  total: number;
+}
+
+export interface InventorySummary {
+  warehouse_id: number;
+  warehouse: string;
+  total: number;
+  sub_warehouses: SubWarehouseSummary[];
+}
+
 export interface TotalInventoryItem {
   product: string;
   total_quantity: number;

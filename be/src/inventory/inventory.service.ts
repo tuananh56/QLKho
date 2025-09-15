@@ -43,4 +43,43 @@ export class InventoryService {
       quantity: inv.quantity,
     }));
   }
+
+  async getInventorySummary(): Promise<any[]> {
+  const inventories = await this.inventoryRepo.find({
+    relations: ['warehouse', 'product', 'subWarehouse'],
+  });
+
+  const grouped: Record<number, any> = {};
+
+  inventories.forEach((inv) => {
+    const wId = inv.warehouse.warehouse_id;
+    if (!grouped[wId]) {
+      grouped[wId] = {
+        warehouse_id: wId,
+        warehouse: inv.warehouse.name,
+        total: 0,
+        sub_warehouses: {}, // gom sub warehouse
+      };
+    }
+
+    // Nếu subWarehouse null, gán default
+    const swId = inv.subWarehouse?.sub_id ?? 0; // 0 đại diện cho null
+    if (!grouped[wId].sub_warehouses[swId]) {
+      grouped[wId].sub_warehouses[swId] = {
+        sub_id: inv.subWarehouse?.sub_id ?? null,
+        sub_name: inv.subWarehouse?.name ?? 'Không có kho con',
+        total: 0,
+      };
+    }
+
+    grouped[wId].sub_warehouses[swId].total += inv.quantity;
+    grouped[wId].total += inv.quantity;
+  });
+
+  return Object.values(grouped).map((w) => ({
+    ...w,
+    sub_warehouses: Object.values(w.sub_warehouses),
+  }));
+}
+
 }

@@ -179,4 +179,32 @@ export class StockOutService {
       note: s.note ?? '',
     }));
   }
+
+  // src/stock-out/stock-out.service.ts
+  async getMonthlyReport(year: number) {
+    const rawData: { month: number; total_quantity: string }[] =
+      await this.stockOutRepo.query(
+        `
+      SELECT 
+        EXTRACT(MONTH FROM date_out) AS month, 
+        SUM(quantity) AS total_quantity
+      FROM stock_out
+      WHERE EXTRACT(YEAR FROM date_out) = $1
+      GROUP BY month
+      ORDER BY month
+    `,
+        [year],
+      );
+
+    // Đảm bảo trả về đủ 12 tháng
+    const result = Array.from({ length: 12 }, (_, i) => {
+      const monthData = rawData.find((d) => Number(d.month) === i + 1);
+      return {
+        month: i + 1,
+        total_quantity: monthData ? Number(monthData.total_quantity) : 0,
+      };
+    });
+
+    return result;
+  }
 }

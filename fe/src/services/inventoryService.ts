@@ -1,17 +1,25 @@
-import api from "./api";
-import { InventoryItem } from "../types"; // dùng lại type từ types.ts
+// src/services/inventoryService.ts
+import axios from "axios";
+import { InventoryItem, TotalInventoryItem } from "../types";
+
+// ============================
+// Axios riêng cho inventory
+// ============================
+const inventoryApi = axios.create({
+  baseURL: "http://localhost:4001", // không có /dashboard
+  headers: { "Content-Type": "application/json" },
+});
+
+// ============================
+// Service functions
+// ============================
 
 /**
  * Lấy tất cả tồn kho
  */
 export const getAllInventory = async (): Promise<InventoryItem[]> => {
-  try {
-    const { data } = await api.get<InventoryItem[]>("/inventory");
-    return data;
-  } catch (error) {
-    console.error("Lỗi khi lấy tồn kho:", error);
-    throw error;
-  }
+  const { data } = await inventoryApi.get<InventoryItem[]>("/inventory");
+  return data;
 };
 
 /**
@@ -20,13 +28,16 @@ export const getAllInventory = async (): Promise<InventoryItem[]> => {
 export const getInventoryByProduct = async (
   product_id: number
 ): Promise<InventoryItem[]> => {
-  try {
-    const { data } = await api.get<InventoryItem[]>(
-      `/inventory?product_id=${product_id}`
-    );
-    return data;
-  } catch (error) {
-    console.error(`Lỗi khi lấy tồn kho cho product_id=${product_id}:`, error);
-    throw error;
-  }
+  const { data } = await inventoryApi.get<InventoryItem[]>(
+    `/inventory?product_id=${product_id}`
+  );
+  return data;
+};
+
+/**
+ * Lấy tổng hợp tồn kho (theo sản phẩm)
+ */
+export const getInventorySummary = async (): Promise<TotalInventoryItem[]> => {
+  const { data } = await inventoryApi.get<TotalInventoryItem[]>("/inventory/summary");
+  return data;
 };

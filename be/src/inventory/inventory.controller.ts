@@ -13,4 +13,9 @@ export class InventoryController {
     }
     return this.inventoryService.findAll();
   }
+  // 👉 Thêm endpoint mới
+  @Get('summary')
+  async getInventorySummary() {
+    return this.inventoryService.getInventorySummary();
+  }
 }

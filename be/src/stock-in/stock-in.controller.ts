@@ -1,5 +1,14 @@
 // src/stock-in/stock-in.controller.ts
-import { Controller, Post, Get, Body, Param, Put, Delete, Query } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  Param,
+  Put,
+  Delete,
+  Query,
+} from '@nestjs/common';
 import { StockInService, StockInItem } from './stock-in.service';
 import { StockIn } from '../database/entities/stock-in.entity';
 
@@ -41,7 +50,8 @@ export class StockInController {
   @Put(':id')
   async update(
     @Param('id') id: number,
-    @Body() body: Partial<{
+    @Body()
+    body: Partial<{
       warehouse_id: number;
       product_id: number;
       quantity: number;
@@ -57,5 +67,11 @@ export class StockInController {
   async remove(@Param('id') id: number): Promise<{ success: boolean }> {
     const success = await this.stockInService.deleteStockIn(id);
     return { success };
+  }
+
+  @Get('report/monthly')
+  async getMonthlyReport(@Query('year') year: string) {
+    const y = parseInt(year) || new Date().getFullYear();
+    return this.stockInService.getMonthlyReport(y);
   }
 }

@@ -125,6 +125,23 @@ export default function DashboardPage() {
       </div>
 
       <div style={{ marginTop: 20, marginBottom: 20 }}>
+        <Link href="/warehouse/warehousePage">
+          <button
+            style={{
+              backgroundColor: "#10b981", // xanh lá đậm
+              color: "white",
+              padding: "8px 16px",
+              borderRadius: "8px",
+              border: "none",
+              cursor: "pointer",
+            }}
+          >
+            🏭 Danh sách kho
+          </button>
+        </Link>
+      </div>
+
+      <div style={{ marginTop: 20, marginBottom: 20 }}>
         <Link href="/warehouse-transfer/warehouseTransferPage">
           <button
             style={{
@@ -137,6 +154,23 @@ export default function DashboardPage() {
             }}
           >
             🔄 Chuyển kho
+          </button>
+        </Link>
+      </div>
+
+      <div style={{ marginTop: 20, marginBottom: 20 }}>
+        <Link href="/report/monthly">
+          <button
+            style={{
+              backgroundColor: "#3b82f6", // xanh dương
+              color: "white",
+              padding: "8px 16px",
+              borderRadius: "8px",
+              border: "none",
+              cursor: "pointer",
+            }}
+          >
+            📊 Xem báo cáo nhập/xuất theo tháng
           </button>
         </Link>
       </div>
