@@ -11,6 +11,8 @@ import { Warehouse } from '../database/entities/warehouse.entity';
 import { Product } from '../database/entities/product.entity';
 import { Store } from '../database/entities/store.entity';
 import { Inventory } from '../database/entities/inventory.entity';
+import * as XLSX from 'xlsx';
+import { Readable } from 'stream';
 
 export interface StockOutItem {
   stock_out_id: number;
@@ -206,5 +208,57 @@ export class StockOutService {
     });
 
     return result;
+  }
+
+  async importExcel(file: Express.Multer.File): Promise<{ total: number }> {
+    if (!file) throw new BadRequestException('Chưa chọn file');
+
+    const workbook = XLSX.read(file.buffer, { type: 'buffer' });
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    const rows: any[] = XLSX.utils.sheet_to_json(worksheet);
+
+    let total = 0;
+    for (const row of rows) {
+      const product = await this.productRepo.findOne({
+        where: { product_id: row.product_id },
+      });
+      const warehouse = await this.warehouseRepo.findOne({
+        where: { warehouse_id: row.warehouse_id },
+      });
+
+      // fix: lấy store theo name (entity) hoặc null
+      const store = row.store_id
+        ? await this.storeRepo.findOne({
+            where: { store_id: Number(row.store_id) },
+          })
+        : null;
+
+      if (!product || !warehouse) continue;
+
+      // Kiểm tra tồn kho
+      const inventory = await this.inventoryRepo.findOne({
+        where: {
+          product: { product_id: product.product_id },
+          warehouse: { warehouse_id: warehouse.warehouse_id },
+        },
+      });
+      if (!inventory || inventory.quantity < row.quantity) continue;
+
+      inventory.quantity -= row.quantity;
+      await this.inventoryRepo.save(inventory);
+
+      const stockOut = this.stockOutRepo.create({
+        product,
+        warehouse,
+        store, // entity hoặc null
+        quantity: row.quantity,
+        note: row.note ?? '',
+      });
+      await this.stockOutRepo.save(stockOut);
+      total++;
+    }
+
+    return { total };
   }
 }

@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 
 export interface StockOutItem {
@@ -23,10 +23,10 @@ export default function StockOutPage() {
   const [sort, setSort] = useState<"asc" | "desc">("desc");
 
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
-
-  // Phân trang
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Debounce search
   useEffect(() => {
@@ -58,7 +58,6 @@ export default function StockOutPage() {
 
   const handleDelete = async (id: number) => {
     if (!confirm("Bạn có chắc muốn xóa phiếu xuất này?")) return;
-
     const res = await fetch(`http://localhost:4001/stock-out/${id}`, {
       method: "DELETE",
     });
@@ -88,6 +87,27 @@ export default function StockOutPage() {
     }
   };
 
+  // Import Excel
+  const handleImportExcel = async () => {
+    if (!fileInputRef.current?.files?.length) return alert("Chưa chọn file");
+    const file = fileInputRef.current.files[0];
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("http://localhost:4001/import/stock-out", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Import thất bại");
+      alert(`Import thành công: ${data.total} phiếu xuất`);
+      fetchStockOuts();
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
+
   // Phân trang logic
   const totalPages = Math.ceil(stockOuts.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -108,24 +128,17 @@ export default function StockOutPage() {
       for (let i = 1; i <= total; i++) pageNumbers.push(i);
     } else {
       pageNumbers.push(1);
-
       if (currentPage > maxPagesToShow + 1) pageNumbers.push("...");
-
       const start = Math.max(2, currentPage - 1);
       const end = Math.min(total - 1, currentPage + 1);
-
       for (let i = start; i <= end; i++) pageNumbers.push(i);
-
       if (currentPage < total - maxPagesToShow) pageNumbers.push("...");
-
       pageNumbers.push(total);
     }
 
     return pageNumbers.map((p, idx) =>
       p === "..." ? (
-        <span key={idx} className="px-2">
-          ...
-        </span>
+        <span key={idx} className="px-2">...</span>
       ) : (
         <button
           key={idx}
@@ -150,13 +163,15 @@ export default function StockOutPage() {
       <h1 className="text-2xl font-bold mb-4 text-center">Quản lý phiếu xuất kho</h1>
 
       <div className="p-4">
+        {/* Nút quay lại */}
         <button
           className="mb-4 bg-gray-300 text-black px-3 py-2 rounded"
-           onClick={() => router.push("http://localhost:4000")}
+          onClick={() => router.push("http://localhost:4000")}
         >
           ← Quay lại
         </button>
 
+        {/* Search & Sort & Add & Delete Selected & Import Excel */}
         <div className="flex gap-2 mb-4">
           <input
             type="text"
@@ -185,8 +200,23 @@ export default function StockOutPage() {
           >
             Xóa phiếu đã chọn
           </button>
+
+          <input
+            type="file"
+            accept=".xlsx,.xls"
+            ref={fileInputRef}
+            style={{ display: "none" }}
+            onChange={handleImportExcel}
+          />
+          <button
+            className="bg-green-500 text-white px-3 py-2 rounded"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            Import Excel
+          </button>
         </div>
 
+        {/* Table */}
         <div className="overflow-x-auto">
           <table className="min-w-full border border-gray-300">
             <thead className="bg-gray-100">
@@ -229,9 +259,7 @@ export default function StockOutPage() {
                         if (e.target.checked) {
                           setSelectedIds([...selectedIds, s.stock_out_id]);
                         } else {
-                          setSelectedIds(
-                            selectedIds.filter((id) => id !== s.stock_out_id)
-                          );
+                          setSelectedIds(selectedIds.filter((id) => id !== s.stock_out_id));
                         }
                       }}
                     />
@@ -240,9 +268,7 @@ export default function StockOutPage() {
                   <td className="border px-3 py-2">{s.product}</td>
                   <td className="border px-3 py-2">{s.warehouse ?? "-"}</td>
                   <td className="border px-3 py-2">{s.quantity}</td>
-                  <td className="border px-3 py-2">
-                    {new Date(s.date_out).toLocaleString()}
-                  </td>
+                  <td className="border px-3 py-2">{new Date(s.date_out).toLocaleString()}</td>
                   <td className="border px-3 py-2">{s.store ?? "-"}</td>
                   <td className="border px-3 py-2">{s.note ?? "-"}</td>
                   <td className="border px-3 py-2 flex gap-1">
@@ -265,6 +291,7 @@ export default function StockOutPage() {
           </table>
         </div>
 
+        {/* Pagination */}
         <div className="mt-4 flex justify-center items-center gap-2">
           <button
             onClick={() => handlePageChange(currentPage - 1)}

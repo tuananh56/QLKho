@@ -16,10 +16,11 @@ import { Manufacturer } from '../database/entities/manufacturer.entity';
       Inventory,
       Product,
       Warehouse,
-      Manufacturer, // 👈 thêm vào
+      Manufacturer,
     ]),
   ],
   providers: [StockInService],
   controllers: [StockInController],
+  exports: [StockInService],
 })
 export class StockInModule {}

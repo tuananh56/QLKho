@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useRef } from "react";
 
 export interface StockInItem {
   stock_in_id: number;
@@ -143,6 +144,29 @@ export default function StockInPage() {
     );
   };
 
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleImportExcel = async () => {
+    if (!fileInputRef.current?.files?.length) return alert("Chưa chọn file");
+
+    const file = fileInputRef.current.files[0];
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("http://localhost:4001/import/excel", {
+        method: "POST",
+        body: formData,
+      });
+      if (!res.ok) throw new Error("Import thất bại");
+      const data = await res.json();
+      alert(`Import thành công: ${data.total} phiếu nhập`);
+      fetchStockIns(); // load lại danh sách sau khi import
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
+
   if (loading) return <p className="p-4">Loading...</p>;
   if (error) return <p className="p-4 text-red-500">Error: {error}</p>;
 
@@ -164,7 +188,7 @@ export default function StockInPage() {
         {/* Phần Search, Table, Pagination ... */}
       </div>
 
-      {/* Search & Sort & Add & Delete Selected */}
+      {/* Search & Sort & Add & Delete Selected & Import Excel */}
       <div className="flex gap-2 mb-4">
         <input
           type="text"
@@ -192,6 +216,22 @@ export default function StockInPage() {
           onClick={handleDeleteSelected}
         >
           Xóa phiếu đã chọn
+        </button>
+
+        {/* Input file ẩn */}
+        <input
+          type="file"
+          accept=".xlsx,.xls"
+          ref={fileInputRef}
+          style={{ display: "none" }}
+          onChange={handleImportExcel}
+        />
+        {/* Nút Import Excel */}
+        <button
+          className="bg-green-500 text-white px-3 py-2 rounded"
+          onClick={() => fileInputRef.current?.click()}
+        >
+          Import Excel
         </button>
       </div>
 

@@ -20,9 +20,7 @@ export default function DashboardPage() {
   const [stockIn, setStockIn] = useState<StockInItem[]>([]);
   const [stockOut, setStockOut] = useState<StockOutItem[]>([]);
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
-  const [totalInventory, setTotalInventory] = useState<TotalInventoryItem[]>(
-    []
-  );
+  const [totalInventory, setTotalInventory] = useState<TotalInventoryItem[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -39,9 +37,7 @@ export default function DashboardPage() {
         const alertsRes = await api.get<AlertItem[]>("/alerts?threshold=10");
         setAlerts(alertsRes.data);
 
-        const totalRes = await api.get<TotalInventoryItem[]>(
-          "/total-inventory"
-        );
+        const totalRes = await api.get<TotalInventoryItem[]>("/total-inventory");
         setTotalInventory(totalRes.data);
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
@@ -52,146 +48,72 @@ export default function DashboardPage() {
   }, []);
 
   return (
-    <div style={{ padding: 20 }}>
-      <h1>QLKho Dashboard</h1>
+    <div className="p-5 animate-fadeIn">
+      <h1 className="text-2xl font-bold text-blue-700 mb-6">QLKho Dashboard</h1>
 
-      {/* 👇 thêm button điều hướng */}
-      <div style={{ marginTop: 20, marginBottom: 20 }}>
+      {/* Buttons */}
+      <div className="space-y-4 mb-8">
         <Link href="/stock-in/StockInPage">
-          <button
-            style={{
-              backgroundColor: "#2563eb",
-              color: "white",
-              padding: "8px 16px",
-              borderRadius: "8px",
-              border: "none",
-              cursor: "pointer",
-            }}
-          >
+          <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
             ➕ Tạo phiếu nhập kho
           </button>
         </Link>
-      </div>
 
-      <div style={{ marginTop: 20, marginBottom: 20 }}>
         <Link href="/stock-out/StockOutPage">
-          <button
-            style={{
-              backgroundColor: "#2563eb",
-              color: "white",
-              padding: "8px 16px",
-              borderRadius: "8px",
-              border: "none",
-              cursor: "pointer",
-            }}
-          >
+          <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
             ➕ Tạo phiếu xuất kho
           </button>
         </Link>
-      </div>
 
-      <div style={{ marginTop: 20, marginBottom: 20 }}>
         <Link href="/inventory/inventoryPage">
-          <button
-            style={{
-              backgroundColor: "#16a34a", // xanh lá
-              color: "white",
-              padding: "8px 16px",
-              borderRadius: "8px",
-              border: "none",
-              cursor: "pointer",
-            }}
-          >
+          <button className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
             📦 Xem tồn kho
           </button>
         </Link>
-      </div>
 
-      <div style={{ marginTop: 20, marginBottom: 20 }}>
         <Link href="/subWarehouse/subWarehousePage">
-          <button
-            style={{
-              backgroundColor: "#16a34a", // xanh lá
-              color: "white",
-              padding: "8px 16px",
-              borderRadius: "8px",
-              border: "none",
-              cursor: "pointer",
-            }}
-          >
-            kho con
+          <button className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
+            Kho con
           </button>
         </Link>
-      </div>
 
-      <div style={{ marginTop: 20, marginBottom: 20 }}>
         <Link href="/warehouse/warehousePage">
-          <button
-            style={{
-              backgroundColor: "#10b981", // xanh lá đậm
-              color: "white",
-              padding: "8px 16px",
-              borderRadius: "8px",
-              border: "none",
-              cursor: "pointer",
-            }}
-          >
+          <button className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition">
             🏭 Danh sách kho
           </button>
         </Link>
-      </div>
 
-      <div style={{ marginTop: 20, marginBottom: 20 }}>
         <Link href="/warehouse-transfer/warehouseTransferPage">
-          <button
-            style={{
-              backgroundColor: "#f59e0b", // vàng cam
-              color: "white",
-              padding: "8px 16px",
-              borderRadius: "8px",
-              border: "none",
-              cursor: "pointer",
-            }}
-          >
+          <button className="bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 transition">
             🔄 Chuyển kho
           </button>
         </Link>
-      </div>
 
-      <div style={{ marginTop: 20, marginBottom: 20 }}>
         <Link href="/report/monthly">
-          <button
-            style={{
-              backgroundColor: "#3b82f6", // xanh dương
-              color: "white",
-              padding: "8px 16px",
-              borderRadius: "8px",
-              border: "none",
-              cursor: "pointer",
-            }}
-          >
+          <button className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition">
             📊 Xem báo cáo nhập/xuất theo tháng
           </button>
         </Link>
       </div>
 
-      <section style={{ marginTop: 20 }}>
-        <h2>Tồn kho</h2>
+      {/* Tables & Charts */}
+      <section className="mb-10">
+        <h2 className="text-xl font-semibold text-gray-800 mb-4">📦 Tồn kho</h2>
         <InventoryTable data={inventory} />
       </section>
 
-      <section style={{ marginTop: 20 }}>
-        <h2>Sản phẩm xuất kho</h2>
+      <section className="mb-10">
+        <h2 className="text-xl font-semibold text-gray-800 mb-4">📤 Sản phẩm xuất kho</h2>
         <StockOutTable data={stockOut} />
       </section>
 
-      <section style={{ marginTop: 20 }}>
-        <h2>Tồn kho thấp</h2>
+      <section className="mb-10">
+        <h2 className="text-xl font-semibold text-gray-800 mb-4">⚠️ Tồn kho thấp</h2>
         <AlertsTable data={alerts} />
       </section>
 
-      <section style={{ marginTop: 40 }}>
-        <h2>Tổng sản phảm tồn kho</h2>
+      <section className="mb-10">
+        <h2 className="text-xl font-semibold text-gray-800 mb-4">📊 Tổng sản phẩm tồn kho</h2>
         <MonthlyChart data={totalInventory} />
       </section>
     </div>
